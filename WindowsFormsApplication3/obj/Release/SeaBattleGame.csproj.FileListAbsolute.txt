@@ -1,0 +1,8 @@
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\bin\Release\SeaBattleGame.exe.config
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\bin\Release\SeaBattleGame.exe
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\bin\Release\SeaBattleGame.pdb
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Release\SeaBattleGame.Form1.resources
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Release\SeaBattleGame.Properties.Resources.resources
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Release\SeaBattleGame.csproj.GenerateResource.Cache
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Release\SeaBattleGame.exe
+L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Release\SeaBattleGame.pdb
