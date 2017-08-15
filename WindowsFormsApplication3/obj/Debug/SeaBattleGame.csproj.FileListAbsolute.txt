@@ -7,3 +7,12 @@ L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaB
 L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.Properties.Resources.resources
 L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.exe
 L:\работа\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.pdb
+E:\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\SeaBattleGame.exe.config
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.exe
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.pdb
+E:\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\SeaBattleGame.exe
+E:\WindowsFormsApplication3\WindowsFormsApplication3\bin\Debug\SeaBattleGame.pdb
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.csprojResolveAssemblyReference.cache
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.Form1.resources
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.Properties.Resources.resources
+E:\WindowsFormsApplication3\WindowsFormsApplication3\obj\Debug\SeaBattleGame.csproj.GenerateResource.Cache

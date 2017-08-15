@@ -9,13 +9,9 @@ using System.Threading;
 
 namespace SeaBattleGame
 {
-    public enum CellCondition
-    {
-        Empty, Completion, Miss, Crippled, Drowned, ValidLocation, NotValidLocation 
-    }
     public class SeaBattlePicture:PictureBox
     {
-        CellCondition renderingMode;
+      CellCondition renderingMode;
 
       public  CellCondition RenderingMode
       {
@@ -31,9 +27,9 @@ namespace SeaBattleGame
             }
       }
 
-      public Location PictureLocation { get; set; }
+      public Location CellLocation { get; set; }
 
-      public Ships Affiliation { get; set; }    
+      public Ship ShipIntoCell { get; set; }    
                
         public SeaBattlePicture():base()
         {
@@ -44,7 +40,8 @@ namespace SeaBattleGame
 
         void PaintBox(object sender,PaintEventArgs e)
         {
-            e.Graphics.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+            e.Graphics.CompositingQuality = 
+                System.Drawing.Drawing2D.CompositingQuality.HighQuality;
 
             Color color = Color.FromKnownColor(KnownColor.Gainsboro);
 

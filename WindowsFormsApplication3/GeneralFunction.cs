@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace SeaBattleGame
 {
-    public class GeneralStaticFunction
+    public class GeneralFunction
     {
-        public static Location FromNumberLocation(bool[,] matrixLocation, int  number)
+        public static Location FromNumberToLocation(bool[,] matrixLocation, int  number)
         {
-         int count = 0;
+            int count = 0;
 
             Location newLocation = new Location();
-
 
             for (var i = 0; i < Field.Size; i++)
             {
@@ -24,8 +23,8 @@ namespace SeaBattleGame
                         if (count == number)
                         {
                             matrixLocation[i, j] = true;
-                            newLocation.IndexI = i;
-                            newLocation.IndexJ = j;
+                            newLocation.I = i;
+                            newLocation.J = j;
                         }
                         count++;
                     }
@@ -44,7 +43,7 @@ namespace SeaBattleGame
         {
             for (var i = 0; i < Matrix.GetLength(0); i++)
             {
-                for (var j = 0; j < Matrix.GetLength(0); j++)
+                for (var j = 0; j < Matrix.GetLength(1); j++)
                 {
                     Matrix[i, j] = false;
                 }

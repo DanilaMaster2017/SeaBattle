@@ -10,18 +10,18 @@ namespace SeaBattleGame
 {
     public class RandomShips
     {
-        static Random random = new Random();
+        static Random random = new Random(DateTime.Now.Millisecond);
 
-        public List<Ships> ListShips = new List<Ships>();
+        public List<Ship> ListShips = new List<Ship>();
 
         bool[,] completingCell = new bool [Field.Size,Field.Size];
         bool[,] notvalidCellLocation = new bool[Field.Size,Field.Size];
 
         Field field;
 
-        static int validCell;
+        int validCell;
 
-        PrototypeShips prototype=new PrototypeShips();
+        PrototypeShip prototype=new PrototypeShip();
         
         int oneDimencional;
 
@@ -34,31 +34,32 @@ namespace SeaBattleGame
 
         void NewArrangement()
         {
-            GeneralStaticFunction.FalseToMatrix(completingCell);
+            GeneralFunction.FalseToMatrix(completingCell);
 
             for (var i = 0; i < 4; i++)
             {
                 for (var j = 0; j < i + 1; j++)
                 {               
-                    prototype.ShipsOrientation = (Orientation)random.Next(0, 2);
+                    prototype.Orientation = (Orientation)random.Next(0, 2);
                     prototype.Size = 4 - i;
 
                     CountingValidCell(prototype);
                     oneDimencional = random.Next(0, validCell);
 
-                    prototype.ShipsLocation =
-                        GeneralStaticFunction.FromNumberLocation(notvalidCellLocation, oneDimencional);
+                    prototype.Location =
+                        GeneralFunction.FromNumberToLocation(notvalidCellLocation, oneDimencional);
                
-                    ListShips.Add(new Ships(prototype.ShipsLocation, prototype.ShipsOrientation,
+                    ListShips.Add(new Ship(prototype.Location, prototype.Orientation,
                         prototype.Size, field));
-                    ListShips[ListShips.Count - 1].MarkShips(completingCell);
+
+                    ListShips[ListShips.Count - 1].MarkShip(completingCell);
                 }
             }
         }
 
-        void CountingValidCell(PrototypeShips prototype)
+        void CountingValidCell(PrototypeShip prototype)
         {
-            GeneralStaticFunction.FalseToMatrix(notvalidCellLocation);
+            GeneralFunction.FalseToMatrix(notvalidCellLocation);
 
             validCell = 0;
             for (var i = 0; i < Field.Size; i++)
@@ -70,21 +71,20 @@ namespace SeaBattleGame
             }
         }
 
-        public bool CheckLocation(PrototypeShips prototype, Location location)
+        public bool CheckLocation(PrototypeShip prototype, Location location)
         {
             int dj = 0;
             int di = 0;
 
-            if (prototype.ShipsOrientation == Orientation.Horizontal) dj = 1;
-            if (prototype.ShipsOrientation == Orientation.Vertical) di = 1;
+            if (prototype.Orientation == Orientation.Horizontal) dj = 1;
+            if (prototype.Orientation == Orientation.Vertical) di = 1;
 
             for (var i = 0; i<prototype.Size; i++)
             {
-                if ((!GeneralStaticFunction.PreventionIndexRange
-                    (location.IndexI + i * di, location.IndexJ + i * dj)) ||
-                    (completingCell[location.IndexI + i * di, location.IndexJ + i * dj]))
+                if ((!GeneralFunction.PreventionIndexRange(location.I + i * di, location.J + i * dj)) 
+                    ||(completingCell[location.I + i * di, location.J + i * dj]))
                     {
-                        notvalidCellLocation[location.IndexI, location.IndexJ] = true;
+                        notvalidCellLocation[location.I, location.J] = true;
                         return false;
                     }
             }
@@ -92,27 +92,27 @@ namespace SeaBattleGame
             return true;
         }
 
-        public void RecalculationCompletingCell(Ships ships)
+        public void RecalculationCompletingCell(Ship ship)
         {
-            ListShips.Remove(ships);
-            GeneralStaticFunction.FalseToMatrix(completingCell);
+            ListShips.Remove(ship);
+            GeneralFunction.FalseToMatrix(completingCell);
 
-            foreach (var value in ListShips) value.MarkShips(completingCell);            
+            foreach (var value in ListShips) value.MarkShip(completingCell);            
         }
 
-        public void AddShips(Ships ships)
+        public void AddShips(Ship ship)
         {
-            ListShips.Add(ships);
-            ships.MarkShips(completingCell);
+            ListShips.Add(ship);
+            ship.MarkShip(completingCell);
         }
 
         public void RandomArrangement()
         {
 
-            foreach (var value in field.randomShips.ListShips)
+            foreach (var value in field.RandomShips.ListShips)
                 value.Destruction();
 
-            field.randomShips.ListShips.Clear();
+            field.RandomShips.ListShips.Clear();
 
             NewArrangement();
         }
@@ -120,7 +120,7 @@ namespace SeaBattleGame
         public void RandomClicked(object sender, EventArgs e)
         {
             RandomArrangement();
-            Form1.PlayerField.DisplayCompletionCell();
+            Form1.LeftField.DisplayCompletionCell();
         }
     }
 }

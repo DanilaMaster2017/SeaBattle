@@ -8,17 +8,17 @@ using System.Drawing;
 
 namespace SeaBattleGame
 {
-    enum MoveState { KnownDirection, UnknownShipsLocation, UnknownDirection }
+    enum MoveState { KnownDirection, UnknownShipLocation, UnknownDirection }
 
     enum Direction { Left, Top, Reight, Bottom }
       
 
-    public class ComputerPlay
+    public class ComputerPlay:Player
     {
         bool oneGuessing = false;
 
-        Random random = new Random();
-        public static bool[,] CheckShot = new bool[Field.Size, Field.Size];
+        Random random = new Random(DateTime.Now.Millisecond);
+        public bool[,] CheckShot = new bool[Field.Size, Field.Size];
         bool[] ChekDirection = new bool[4];
 
         int count;
@@ -29,30 +29,27 @@ namespace SeaBattleGame
         protected int IntactCell { get; set; }
         int intactDirection = 4;
 
-        MoveState moveState = MoveState.UnknownShipsLocation;
+        MoveState moveState = MoveState.UnknownShipLocation;
         Direction direction;
 
         CellCondition shotState;
 
-        public ComputerPlay()
+        public ComputerPlay(Field field):base(field)
         {
             shotState = CellCondition.Miss;
-            GeneralStaticFunction.FalseToMatrix(CheckShot);
+            GeneralFunction.FalseToMatrix(CheckShot);
             IntactCell = Field.Size * Field.Size;
         }
 
-        public void Move()
-        {
-           
+        public override void Move()
+        {          
             if (GameController.EndedGame) return;
-            //GameController.ShotComputer();
-            if (shotState == CellCondition.Miss) GameController.BeginComputerMove();
 
             CountingIntactCell();
 
             switch (moveState)
             {
-                case MoveState.UnknownShipsLocation:
+                case MoveState.UnknownShipLocation:
                     LongShot();
                     break;
 
@@ -65,7 +62,8 @@ namespace SeaBattleGame
                     break;
             }
 
-            if (shotState == CellCondition.Miss) GameController.BeginPlayerMove();
+            if (shotState == CellCondition.Miss)
+                CallTransferMove();
         }
 
         protected virtual void CountingIntactCell()
@@ -81,8 +79,8 @@ namespace SeaBattleGame
 
             Location newShot = OverrideShot(CheckShot, shot);
 
-            shotState = Form1.PlayerField.Shot(
-                Form1.PlayerField.PictBox[newShot.IndexI, newShot.IndexJ]);
+            shotState = oponentField.Shot(
+                oponentField.CellField[newShot.I, newShot.J]);
 
             if (shotState == CellCondition.Crippled)
             {
@@ -97,7 +95,7 @@ namespace SeaBattleGame
 
         protected virtual Location OverrideShot(bool[,] CheckShot, int shot)
         {
-            return GeneralStaticFunction.FromNumberLocation(CheckShot, shot);
+            return GeneralFunction.FromNumberToLocation(CheckShot, shot);
         }
 
         void GuessingDirection()
@@ -142,25 +140,25 @@ namespace SeaBattleGame
             oneGuessing = false;
             intactDirection = 0;
 
-            if ((currentShot.IndexJ > 0) && (!CheckShot[currentShot.IndexI, currentShot.IndexJ - 1]))
+            if ((currentShot.J > 0) && (!CheckShot[currentShot.I, currentShot.J - 1]))
             {
                  intactDirection++;               
             }
             else ChekDirection[0] = true;
 
-            if ((currentShot.IndexI > 0) && (!CheckShot[currentShot.IndexI - 1, currentShot.IndexJ]))
+            if ((currentShot.I > 0) && (!CheckShot[currentShot.I - 1, currentShot.J]))
             {
                 intactDirection++;             
             }
             else ChekDirection[1] = true;
 
-            if ((currentShot.IndexJ < Field.Size - 1) && (!CheckShot[currentShot.IndexI, currentShot.IndexJ + 1]))
+            if ((currentShot.J < Field.Size - 1) && (!CheckShot[currentShot.I, currentShot.J + 1]))
             {
                intactDirection++;             
             }
             else ChekDirection[2] = true;
 
-            if ((currentShot.IndexI < Field.Size - 1) && (!CheckShot[currentShot.IndexI + 1, currentShot.IndexJ]))
+            if ((currentShot.I < Field.Size - 1) && (!CheckShot[currentShot.I + 1, currentShot.J]))
             {
                 intactDirection++;                
             }
@@ -179,8 +177,8 @@ namespace SeaBattleGame
 
             CellCondition shotState;
 
-            if ((GeneralStaticFunction.PreventionIndexRange(currentShot.IndexI + di, currentShot.IndexJ + dj))
-                && (!CheckShot[currentShot.IndexI + di, currentShot.IndexJ + dj]))
+            if ((GeneralFunction.PreventionIndexRange(currentShot.I + di, currentShot.J + dj))
+                && (!CheckShot[currentShot.I + di, currentShot.J + dj]))
             {
                 shotState = ShotDirection(direction);
             }
@@ -232,19 +230,19 @@ namespace SeaBattleGame
                 dj = 0; di = 1;
             }
            
-            shotState = Form1.PlayerField.Shot(
-                Form1.PlayerField.PictBox[currentShot.IndexI + di, currentShot.IndexJ + dj]);
-            CheckShot[currentShot.IndexI + di, currentShot.IndexJ + dj] = true;
+            shotState = oponentField.Shot(
+                oponentField.CellField[currentShot.I + di, currentShot.J + dj]);
+            CheckShot[currentShot.I + di, currentShot.J + dj] = true;
 
 
             if (shotState != CellCondition.Miss)
             {
-                currentShot.IndexI += di;
-                currentShot.IndexJ += dj;
+                currentShot.I += di;
+                currentShot.J += dj;
             }
 
             if (shotState == CellCondition.Drowned)
-                moveState = MoveState.UnknownShipsLocation;
+                moveState = MoveState.UnknownShipLocation;
 
             return shotState;
         }

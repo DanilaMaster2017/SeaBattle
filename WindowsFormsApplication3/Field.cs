@@ -10,39 +10,41 @@ namespace SeaBattleGame
 {
    public class Field
    {
-        static public int Size { get; set; } = 10;
+        static public int Size { get; } = 10;
        
-        public SeaBattlePicture[,] PictBox;
+        public SeaBattlePicture[,] CellField { get; set; }
 
         public bool[,] MatrixShips { get; set; }
 
-        
+        public Player Oponent { get; set; }
+
+        public event EventHandler ShipDrown;
+        public event EventHandler MadeShot;
 
         public static int FourdeckShips { get; } = 1;
         public static int ThreedeckShips { get; } = 2;
         public static int TwodeckShips { get; } = 3;
         public static int OnedeckShips { get; } = 4;
 
-        public static int ShipsCount { get; } = FourdeckShips + ThreedeckShips + TwodeckShips + OnedeckShips;
+        public static int ShipsCount { get; } = 
+            FourdeckShips + ThreedeckShips + 
+            TwodeckShips + OnedeckShips;
 
-        // public List<Ships> ListShips=new List<Ships>();
-
-        public RandomShips randomShips;
+        public RandomShips RandomShips { get; set; }
 
         public Field()
         {
             MatrixShips = new bool[Size, Size];
             MatrixShips.Initialize();
-
-            
-            PictBox = new SeaBattlePicture[Size, Size];
+           
+            CellField = new SeaBattlePicture[Size, Size];
 
             for (var  i = 0; i<Size ; i++)
             {
                 for (var j = 0; j < Size; j++)
                 {
-                    PictBox[i, j] = new SeaBattlePicture();
-                    PictBox[i, j].PictureLocation = new Location(i, j);
+                    CellField[i, j] = new SeaBattlePicture();
+                    CellField[i, j].CellLocation = new Location(i, j);
                     MatrixShips[i, j] = false;                 
                 }
             }
@@ -52,66 +54,71 @@ namespace SeaBattleGame
 
         void FillingShips()
         {
-            /*
-            ListShips.Add(new Ships(new Location(4,2),Orientation.Horizontal,4, this));
-            ListShips.Add(new Ships(new Location(7, 0), Orientation.Horizontal, 3, this));
-            ListShips.Add(new Ships(new Location(0, 6), Orientation.Vertical, 3, this));
-            ListShips.Add(new Ships(new Location(1, 1), Orientation.Vertical, 2, this));
-            ListShips.Add(new Ships(new Location(4, 8), Orientation.Horizontal, 2, this));
-            ListShips.Add(new Ships(new Location(6, 7), Orientation.Vertical, 2, this));
-            ListShips.Add(new Ships(new Location(5, 0), Orientation.Horizontal, 1, this));
-            ListShips.Add(new Ships(new Location(6, 4), Orientation.Horizontal, 1, this));
-            ListShips.Add(new Ships(new Location(8, 5), Orientation.Horizontal, 1, this));
-            ListShips.Add(new Ships(new Location(9, 2), Orientation.Horizontal, 1, this));
-            */
-            randomShips = new RandomShips(this);
-
+            RandomShips = new RandomShips(this);
         }
 
-        void DrownedShips(Ships ships)
+        public void DisplayCompletionCell()
         {
-            Location location = ships.ShipsLocation;
-            Orientation orientation = ships.ShipsOrientation;
-            int size = ships.Size;
+            for (var i = 0; i < Size; i++)
+            {
+                for (var j = 0; j < Size; j++)
+                {
+                    if (MatrixShips[i, j])
+                    {
+                        CellField[i, j].RenderingMode = CellCondition.Completion;
+                    }
+                    else
+                    {
+                        CellField[i, j].RenderingMode = CellCondition.Empty;
+                    }
+                }
+            }
+        }
 
-            if (this is PlayerField) ships.MarkShips(ComputerPlay.CheckShot);
+        void DrownedShip(Ship ship)
+        {
+            Location location = ship.Location;
+            Orientation orientation = ship.Orientation;
+            int size = ship.Size;
+
+            if (Oponent is ComputerPlay) ship.MarkShip(((ComputerPlay)Oponent).CheckShot);
+            ShipDrown?.Invoke(ship, EventArgs.Empty);
+
+            int shiftDown;
+            int shiftRight;
 
             for (var i = 0; i < size; i++)
             {
-                if (orientation == Orientation.Horizontal)
-                {
-                    PictBox[location.IndexI, location.IndexJ+i].RenderingMode = CellCondition.Drowned;
-                }
-                else
-                {
-                    PictBox[location.IndexI+i, location.IndexJ].RenderingMode = CellCondition.Drowned;
-                }
+                shiftDown = i * (1 - (int)orientation);
+                shiftRight = i * (int)orientation;
+
+                CellField[location.I + shiftDown, location.J + shiftRight].RenderingMode = 
+                    CellCondition.Drowned;            
             }
         }
 
         
 
-        public CellCondition Shot(SeaBattlePicture picture)
+        public CellCondition Shot(SeaBattlePicture cellShot)
         {
-            if (MatrixShips[picture.PictureLocation.IndexI, picture.PictureLocation.IndexJ])
+            if (MatrixShips[cellShot.CellLocation.I, cellShot.CellLocation.J])
             {
-                if (picture.Affiliation.CheckDrowned(picture.PictureLocation))
+                if (cellShot.ShipIntoCell.CheckDrowned(cellShot.CellLocation))
                 {
-                    DrownedShips(picture.Affiliation);
-                    GameController.ShipsDrowned(picture.Affiliation);
+                    DrownedShip(cellShot.ShipIntoCell);
                 }
                 else
                 {
-                    picture.RenderingMode = CellCondition.Crippled;
+                    cellShot.RenderingMode = CellCondition.Crippled;
                 }
             }
             else
             {
-                picture.RenderingMode = CellCondition.Miss;
+                cellShot.RenderingMode = CellCondition.Miss;
             }
 
-            GameController.ShotUpdater(this,picture.RenderingMode);
-            return picture.RenderingMode;
+            MadeShot(this, new shotEventArgs(cellShot.RenderingMode));
+            return cellShot.RenderingMode;
         }  
    }
 }

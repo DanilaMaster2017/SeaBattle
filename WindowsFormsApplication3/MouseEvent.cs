@@ -7,13 +7,16 @@ using System.Windows.Forms;
 
 namespace SeaBattleGame
 {
-    public class MouseEvent
+    public static class MouseEvent
     {
-        static PrototypeShips protoShips = null;
-        static Ships ships = null;
+        static PrototypeShip protoShip = null;
+        static Ship ship = null;
 
         public static bool BeginArround { get; set; } = false;
         static bool checkValidLocation = false;
+
+        static Field field = Form1.LeftField;
+        static RandomShips shipsOnFild = field.RandomShips;
 
         public static void MouseClicked(object sender, MouseEventArgs e)
         {          
@@ -21,19 +24,21 @@ namespace SeaBattleGame
 
             if (!BeginArround)
             {
-                if (cell.Affiliation == null) return;
+                if (cell.ShipIntoCell == null) return;
                 BeginArround = true;
 
-                ships = cell.Affiliation;
-                ships.Destruction();
-                Form1.PlayerField.randomShips.RecalculationCompletingCell(ships);
+                ship = cell.ShipIntoCell;
+                ship.Destruction();
+                shipsOnFild.RecalculationCompletingCell(ship);
 
-                Location endLocation = new Location(cell.PictureLocation.IndexI - (1 - (int)ships.ShipsOrientation),
-                    cell.PictureLocation.IndexJ - (int)ships.ShipsOrientation);
-                DisplayFildPlace(ships.ShipsLocation,endLocation);
+                Location endLocation = new Location(
+                    cell.CellLocation.I - (1 - (int)ship.Orientation),
+                    cell.CellLocation.J - (int)ship.Orientation);
 
-                protoShips = new PrototypeShips(cell.PictureLocation, ships.ShipsOrientation, ships.Size);
-                checkValidLocation = Form1.PlayerField.randomShips.CheckLocation(protoShips, protoShips.ShipsLocation);
+                DisplayFieldPlace(ship.Location,endLocation);
+
+                protoShip = new PrototypeShip(cell.CellLocation, ship.Orientation, ship.Size);
+                checkValidLocation = shipsOnFild.CheckLocation(protoShip, protoShip.Location);
                 DisplayPrototypeShip();
 
             }
@@ -41,90 +46,94 @@ namespace SeaBattleGame
             {
                 BeginArround = false;
 
-                Ships newShips;
+                Ship newShips;
 
-                checkValidLocation = Form1.PlayerField.randomShips.CheckLocation(protoShips, protoShips.ShipsLocation);
+                checkValidLocation = shipsOnFild.CheckLocation(protoShip, protoShip.Location);
+
                 if (checkValidLocation)
                 {
-                    newShips = new Ships(protoShips.ShipsLocation, protoShips.ShipsOrientation,
-                        protoShips.Size, Form1.PlayerField);
+                    newShips = new Ship(protoShip.Location, protoShip.Orientation,
+                        protoShip.Size, Form1.LeftField);
                 }
                 else
                 {
-                    newShips = new Ships(ships);
+                    newShips = new Ship(ship);
 
                     Location endedLocation = new Location(
-               cell.PictureLocation.IndexI + (1 - (int)protoShips.ShipsOrientation) * (protoShips.Size - 1),
-               cell.PictureLocation.IndexJ + (int)protoShips.ShipsOrientation * (protoShips.Size - 1));
+               cell.CellLocation.I + (1 - (int)protoShip.Orientation) * (protoShip.Size - 1),
+               cell.CellLocation.J + (int)protoShip.Orientation * (protoShip.Size - 1));
 
-                    DisplayFildPlace(cell.PictureLocation, endedLocation);
+                    DisplayFieldPlace(cell.CellLocation, endedLocation);
                 }
 
-                Form1.PlayerField.randomShips.AddShips(newShips);
+                shipsOnFild.AddShips(newShips);
 
-                Location endLocation = new Location(newShips.ShipsLocation.IndexI + 
-                    (1 - (int)newShips.ShipsOrientation) * (newShips.Size - 1),
-                    newShips.ShipsLocation.IndexJ + (int)newShips.ShipsOrientation * (newShips.Size - 1));
+                Location endLocation = new Location(
+                    newShips.Location.I +(1 - (int)newShips.Orientation) * (newShips.Size - 1),
+                    newShips.Location.J + (int)newShips.Orientation * (newShips.Size - 1)
+                    );
 
-                DisplayFildPlace(newShips.ShipsLocation, endLocation);
+                DisplayFieldPlace(newShips.Location, endLocation);
 
-                ships = null;
+                ship = null;
             }
            
         }
 
         public static void MouseEnter(object sender, EventArgs e)
         {
-            if (ships == null) return;
+            if (ship == null) return;
 
             SeaBattlePicture cell = (SeaBattlePicture)sender;
 
-            protoShips.ShipsLocation = new Location(cell.PictureLocation.IndexI,
-                cell.PictureLocation.IndexJ);
+            protoShip.Location = new Location(cell.CellLocation.I,
+                cell.CellLocation.J);
 
-            checkValidLocation = Form1.PlayerField.randomShips.CheckLocation(protoShips, protoShips.ShipsLocation);
+            checkValidLocation = shipsOnFild.CheckLocation(protoShip, protoShip.Location);
+
             DisplayPrototypeShip();
         }
 
         public static void MouseLeave(object sender, EventArgs e)
         {
-            if (ships == null) return;
+            if (ship == null) return;
 
             SeaBattlePicture cell = (SeaBattlePicture)sender;
 
             Location endLocation = new Location(
-                cell.PictureLocation.IndexI + ( 1 - (int)protoShips.ShipsOrientation) * (protoShips.Size - 1),
-                cell.PictureLocation.IndexJ + (int)protoShips.ShipsOrientation * (protoShips.Size - 1));
+                cell.CellLocation.I + ( 1 - (int)protoShip.Orientation) * (protoShip.Size - 1),
+                cell.CellLocation.J + (int)protoShip.Orientation * (protoShip.Size - 1)
+                );
 
-            DisplayFildPlace(cell.PictureLocation, endLocation);            
+            DisplayFieldPlace(cell.CellLocation, endLocation);            
         }
 
         public static void MouseWheel(object sender, MouseEventArgs e)
         {
-            if (protoShips == null) return;
+            if (protoShip == null) return;
 
             if (e.Delta > 0)
             {
-                if (protoShips.ShipsOrientation == Orientation.Horizontal) return;
-                protoShips.ShipsOrientation = Orientation.Horizontal;
+                if (protoShip.Orientation == Orientation.Horizontal) return;
+                protoShip.Orientation = Orientation.Horizontal;
             }
             else
             {
-                if (protoShips.ShipsOrientation == Orientation.Vertical) return;
-                protoShips.ShipsOrientation = Orientation.Vertical;
+                if (protoShip.Orientation == Orientation.Vertical) return;
+                protoShip.Orientation = Orientation.Vertical;
             }
 
             Location beginLocation = new Location(
-                protoShips.ShipsLocation.IndexI + (int)protoShips.ShipsOrientation,
-                protoShips.ShipsLocation.IndexJ + (1 - (int)protoShips.ShipsOrientation));
+                protoShip.Location.I + (int)protoShip.Orientation,
+                protoShip.Location.J + (1 - (int)protoShip.Orientation));
 
             Location endLocation = new Location(
-                protoShips.ShipsLocation.IndexI + (int)protoShips.ShipsOrientation * (protoShips.Size - 1),
-                protoShips.ShipsLocation.IndexJ + (1 - (int)protoShips.ShipsOrientation) * (protoShips.Size - 1));
+                protoShip.Location.I + (int)protoShip.Orientation * (protoShip.Size - 1),
+                protoShip.Location.J + (1 - (int)protoShip.Orientation) * (protoShip.Size - 1));
 
-            DisplayFildPlace(beginLocation,endLocation);
+            DisplayFieldPlace(beginLocation,endLocation);
 
-            checkValidLocation = Form1.PlayerField.randomShips.CheckLocation(protoShips, protoShips.ShipsLocation);
+            checkValidLocation = shipsOnFild.CheckLocation(protoShip, protoShip.Location);
             DisplayPrototypeShip();
         }
 
@@ -144,28 +153,29 @@ namespace SeaBattleGame
             int indexI;
             int indexJ;
              
-            for (var i=0; i<protoShips.Size; i++)
+            for (var i=0; i<protoShip.Size; i++)
             {
-                indexI = protoShips.ShipsLocation.IndexI + (1 - (int)protoShips.ShipsOrientation) * i;
-                indexJ = protoShips.ShipsLocation.IndexJ + (int)protoShips.ShipsOrientation * i;
+                indexI = protoShip.Location.I + (1 - (int)protoShip.Orientation) * i;
+                indexJ = protoShip.Location.J + (int)protoShip.Orientation * i;
 
-                if (GeneralStaticFunction.PreventionIndexRange(indexI, indexJ))
+                if (GeneralFunction.PreventionIndexRange(indexI, indexJ))
                 {
-                    Form1.PlayerField.PictBox[indexI, indexJ].RenderingMode = condition;
+                    field.CellField[indexI, indexJ].RenderingMode = condition;
                 }
             }
         }
 
-        static void DisplayFildPlace (Location begLocation, Location endLocation)
+        static void DisplayFieldPlace (Location begLocation, Location endLocation)
         {
             CellCondition condition;
-            for (var i = begLocation.IndexI; i <= endLocation.IndexI; i++)
+
+            for (var i = begLocation.I; i <= endLocation.I; i++)
             {
-                for (var j = begLocation.IndexJ; j <= endLocation.IndexJ; j++)
+                for (var j = begLocation.J; j <= endLocation.J; j++)
                 {
-                    if (GeneralStaticFunction.PreventionIndexRange(i, j))
+                    if (GeneralFunction.PreventionIndexRange(i, j))
                     { 
-                        if (Form1.PlayerField.MatrixShips[i, j])
+                        if (field.MatrixShips[i, j])
                         {
                             condition = CellCondition.Completion;
                         }
@@ -173,7 +183,7 @@ namespace SeaBattleGame
                         {
                             condition = CellCondition.Empty;
                         }
-                        Form1.PlayerField.PictBox[i, j].RenderingMode = condition;
+                        field.CellField[i, j].RenderingMode = condition;
                     }
                 }                     
             }
@@ -183,15 +193,18 @@ namespace SeaBattleGame
         {
             BeginArround = false;
 
-            Ships  newShips = new Ships(ships);
+            Ship  newShips = new Ship(ship);
 
-            Form1.PlayerField.randomShips.AddShips(newShips);
+            field.RandomShips.AddShips(newShips);
 
-            Location endLocation = new Location(newShips.ShipsLocation.IndexI + (1 - (int)newShips.ShipsOrientation) * (newShips.Size - 1),
-                newShips.ShipsLocation.IndexJ + (int)newShips.ShipsOrientation * (newShips.Size - 1));
-            DisplayFildPlace(newShips.ShipsLocation, endLocation);
+            Location endLocation = new Location(
+                newShips.Location.I + (1 - (int)newShips.Orientation) * (newShips.Size - 1),
+                newShips.Location.J + (int)newShips.Orientation * (newShips.Size - 1)
+                );
 
-            ships = null;
+            DisplayFieldPlace(newShips.Location, endLocation);
+
+            ship = null;
         }
 
         public static void ButtonEnter(object sender, EventArgs e)

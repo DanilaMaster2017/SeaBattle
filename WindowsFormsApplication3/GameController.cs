@@ -12,13 +12,274 @@ using SeaColor = System.Drawing.Color;
 
 namespace SeaBattleGame
 {
-    public class GameController
+
+    static public class GameController
     {
-        static Random random = new Random();
+        class GameStatistika
+        {
+            public Label labelShip;
+            public Label labelShot;
+            public Label namePlayer;
 
-        enum Players {Computer,Player}
+            public int countWin { get; set; }
+            int countLeftShot;
+            int countShips;
 
-        static bool soundPlay = true;
+            public GameStatistika(Label namePlayer, Label labelShip, Label labelShot)
+            {
+                this.labelShip = labelShip;
+                this.labelShot = labelShot;
+                this.namePlayer = namePlayer;
+
+                countWin=0;
+                countShips = Field.ShipsCount;
+                countLeftShot = Field.Size * Field.Size;
+            }
+
+            public int CountShips
+            {
+                set
+                {
+                    countShips = value;
+                    labelShip.Text = shipsWord + value;
+                    if (countShips == 0)
+                    {
+                        GameOver(this);
+
+                    }
+                }
+                get { return countShips; }
+            }
+
+            public int CountLeftShot
+            {
+                get { return countLeftShot; }
+                set
+                {
+                    countLeftShot = value;
+                    labelShot.Text = shotWord + countLeftShot;
+                }
+            }
+        }
+
+        static Player rightPlayer;
+        static Player leftPlayer;
+
+        static GameStatistika rightStatistika;
+        static GameStatistika leftStatistika;
+
+        static Random random = new Random(DateTime.Now.Millisecond);
+
+        enum Side { Left, Right }
+
+        public static bool EndedGame { get; set; }
+
+        public static event EventHandler BeginGame;
+        public static event EventHandler EndGame;
+        public static event EventHandler BeforeGame;
+
+        static string shipsWord = "Кораблей:";
+        static string shotWord = "Выстрелов:";
+
+        static Label score;
+
+        static SeaColor moveColor = SeaColor.Gold;
+        static SeaColor passColor = SeaColor.Black;
+
+        static SeaColor winColor = SeaColor.Green;
+        static SeaColor lossColor = SeaColor.Red;
+
+        public static void GetLabel(Label rightShips, Label rightShot, Label rightName,
+            Label leftShips, Label leftShot, Label leftName, Label score)
+        {
+            leftStatistika = new GameStatistika(leftName, leftShips, leftShot);
+            rightStatistika = new GameStatistika(rightName, rightShips, rightShot);
+
+            GameController.score = score;
+
+            Init();
+        }
+
+        static void Init()
+        {
+            Form1.RightField.MadeShot += Made_Shot;
+            Form1.LeftField.MadeShot += Made_Shot;
+        }
+
+        public static void Begin_Clicked(object sender, EventArgs e)
+        {
+            EnabledSwitch(Form1.LeftField.CellField, false);
+
+            if (MouseEvent.BeginArround) MouseEvent.EndedArround();     
+
+            BeforeSound.Pause();
+
+            EndedGame = false;
+            BeginGame(null, EventArgs.Empty);
+
+            leftPlayer = Form1.LeftPlayer;
+            rightPlayer = Form1.RightPlayer;
+
+            rightPlayer.Oponent = leftPlayer;
+            leftPlayer.Oponent = rightPlayer;
+
+            rightPlayer.TransferMove += Transfer_Move;
+            leftPlayer.TransferMove += Transfer_Move;          
+
+            Side OneMove = (Side)random.Next(0, 2);
+
+            if (OneMove == Side.Right)
+            {
+                Transfer_Move(leftPlayer, EventArgs.Empty);
+            }
+            else
+            {
+                Transfer_Move(rightPlayer, EventArgs.Empty);
+            }
+
+            EnabledSwitch(Form1.RightField.CellField, true);
+        }        
+
+        public static void Ok_Clicked(object sender, EventArgs e)
+        {
+            BeforeGame(null, EventArgs.Empty);
+            EnabledSwitch(Form1.LeftField.CellField, true);
+
+            foreach (var value in Form1.RightField.CellField)
+                value.RenderingMode = CellCondition.Empty;
+
+            Form1.LeftField.RandomShips.RandomArrangement();
+            Form1.LeftField.DisplayCompletionCell();
+
+            Form1.RightField.RandomShips.RandomArrangement();
+
+            resetStatistika(rightStatistika);
+            resetStatistika(leftStatistika);
+
+            EndedSound.Stop();
+            BeforeSound.Play();
+        }
+
+        static void resetStatistika(GameStatistika statistika)
+        {
+            statistika.CountShips = Field.ShipsCount;   
+            statistika.CountLeftShot = Field.Size * Field.Size;
+            statistika.namePlayer.ForeColor = passColor;
+        }
+
+        static void Transfer_Move(object sender, EventArgs e)
+        {             
+            Player player = (Player)sender;
+
+            if (player == rightPlayer)
+            {
+                rightStatistika.namePlayer.ForeColor = passColor;
+                leftStatistika.namePlayer.ForeColor = moveColor;
+            }
+            else
+            {
+                leftStatistika.namePlayer.ForeColor = passColor;
+                rightStatistika.namePlayer.ForeColor = moveColor;
+            }
+
+            Refresh();
+
+            player.Oponent.Move();           
+        }
+
+        static void Refresh()
+        {
+            rightStatistika.namePlayer.Invalidate();
+            leftStatistika.namePlayer.Invalidate();
+            leftStatistika.namePlayer.Update();
+            rightStatistika.namePlayer.Update();
+            Thread.Sleep(100);
+        }
+
+        static void Made_Shot(object sender, EventArgs e)
+        {
+            Field field = (Field)sender;
+
+            if (field == Form1.RightField)
+            {
+                leftStatistika.CountLeftShot--;
+            }
+            else
+            {
+                rightStatistika.CountLeftShot--;
+            }
+
+            CellCondition result = ((shotEventArgs)e).shotResult;
+
+            if (result == CellCondition.Drowned)
+            {
+                if (field == Form1.RightField)
+                {
+                    rightStatistika.CountShips--;
+                }
+                else
+                {
+                    leftStatistika.CountShips--;
+                }
+            }
+
+            if (soundPlay)
+            {
+                ShotSound.PlaySync();
+
+                if (result == CellCondition.Miss) MissSound.PlaySync();
+                else
+                if (result == CellCondition.Crippled) CrippledSound.PlaySync();
+                else
+                if (result == CellCondition.Drowned) DrownedShipsSound.PlaySync();
+            }
+        }
+
+        static void GameOver(GameStatistika lossStatistika)
+        {
+            EndedGame = true;
+            EnabledSwitch(Form1.RightField.CellField,false);
+
+            GameStatistika winStatistika;
+
+            if (lossStatistika.Equals(rightStatistika))
+            {
+                winStatistika = leftStatistika;
+                PlaysSound(WinSound);
+            }
+            else
+            {
+                winStatistika = rightStatistika;
+                PlaysSound(LoseSound);
+            }
+
+            winStatistika.countWin++;
+            winStatistika.namePlayer.ForeColor = winColor;
+
+            lossStatistika.namePlayer.ForeColor = lossColor;          
+
+            EndGame(null, EventArgs.Empty);
+
+            score.Text = string.Format("{0}:{1}", leftStatistika.countWin, rightStatistika.countWin);
+
+            rightPlayer.TransferMove -= Transfer_Move;
+            leftPlayer.TransferMove -= Transfer_Move;
+        }
+
+        static void EnabledSwitch(SeaBattlePicture[,] Matrix, bool value)
+        {
+            for (var i = 0; i < Field.Size; i++)
+            {
+                for (var j = 0; j < Field.Size; j++)
+                {
+                    Matrix[i, j].Enabled = value;
+                }
+            }
+        }
+
+        #region music
+
+        static bool soundPlay = false;
 
         static string path = Environment.CurrentDirectory + "\\PlaySound\\";
 
@@ -32,58 +293,24 @@ namespace SeaBattleGame
         static SoundPlayer CrippledSound;
         static SoundPlayer DrownedShipsSound;
 
-        public static event EventHandler ShipsDrown;
-
-        public static bool EndedGame { get; set; }
-
-        public static event EventHandler BeginGame;
-        public static event EventHandler EndGame;
-        public static event EventHandler BeforeGame;
-
-        static string shipsWord = "Кораблей:";
-        static string shotWord = "Выстрелов:";
-
-        static Label shipsComputer;
-        static Label shotComputer;
-        static Label nameComputer;
-
-        static Label shipsPlayer;
-        static Label shotPlayer;
-        static Label namePlayer;
-
-        static Label score;
-
-        static SeaColor moveColor = SeaColor.Gold;
-        static SeaColor passColor =SeaColor.Black;
-
-        static SeaColor winColor = SeaColor.Green;
-        static SeaColor lossColor = SeaColor.Red;
-
-        static int playerWin = 0;
-        static int computerWin = 0;
-
-        static int playerShips = Field.ShipsCount;
-        static int computerShips = Field.ShipsCount;
-
-        static int playerShot=Field.Size * Field.Size;
-        static int computerShot= Field.Size * Field.Size;
-
         static GameController()
-        {      
-            ShotSound = new SoundPlayer(path + "выстрел2.wav");
-            MissSound = new SoundPlayer(path+"мимо.wav");
-            CrippledSound = new SoundPlayer(path+"подбит.wav");
-            DrownedShipsSound = new SoundPlayer(path + "потоп корабля.wav");
+        {
+            ShotSound = new SoundPlayer(path + "shot.wav");
+            MissSound = new SoundPlayer(path + "miss.wav");
+            CrippledSound = new SoundPlayer(path + "crip.wav");
+            DrownedShipsSound = new SoundPlayer(path + "drownShips.wav");
 
             BeforeSound.Open(new Uri(path + "pirates.mp3", UriKind.RelativeOrAbsolute));
-            EndedSound.Open(new Uri(path + "морские дьяволы.mp3", UriKind.RelativeOrAbsolute));
-            WinSound.Open(new Uri(path + "победа.mp3", UriKind.RelativeOrAbsolute)); ;
-            LoseSound.Open(new Uri(path + "проигрыш.mp3", UriKind.RelativeOrAbsolute));
+            EndedSound.Open(new Uri(path + "seaDemons.mp3", UriKind.RelativeOrAbsolute));
+            WinSound.Open(new Uri(path + "winner.mp3", UriKind.RelativeOrAbsolute)); 
+            LoseSound.Open(new Uri(path + "loss.mp3", UriKind.RelativeOrAbsolute));
+
+            SoundSwitch(0);
 
             WinSound.MediaEnded += EndedSoundPlay;
             LoseSound.MediaEnded += EndedSoundPlay;
 
-            BeforeSound.MediaEnded += BeforeSound_MediaEnded;    
+            BeforeSound.MediaEnded += BeforeSound_MediaEnded;       
         }
 
         private static void BeforeSound_MediaEnded(object sender, EventArgs e)
@@ -94,193 +321,6 @@ namespace SeaBattleGame
         private static void EndedSoundPlay(object sender, EventArgs e)
         {
             PlaysSound(EndedSound);
-        }
-
-        static int  PlayerShips
-        {
-            set
-            {
-                playerShips = value;
-                shipsPlayer.Text = shipsWord + value;
-                if (playerShips == 0) GameOver(Players.Computer);
-            }
-            get { return playerShips; }
-        }
-
-        static int ComputerShips
-        {
-            set
-            {
-                computerShips = value;
-                shipsComputer.Text = shipsWord + value;
-                if (computerShips == 0) GameOver(Players.Player);
-            }
-            get { return computerShips; }
-        }
-
-        static int ComputerShot
-        {
-            get {return computerShot; } 
-            set
-            {
-                computerShot = value;
-                shotComputer.Text = shotWord + computerShot;
-            }
-        }
-
-        static int PlayerShot
-        {
-            get { return playerShot; }
-            set
-            {
-                playerShot = value;
-                shotPlayer.Text = shotWord + playerShot;
-            }
-        }
-
-        public static void GetLabel( Label shipsComputer, Label shotComputer, Label nameComputer,
-            Label shipsPlayer, Label shotPlayer, Label namePlayer, Label score)
-        {
-            GameController.shipsComputer=shipsComputer;
-            GameController.shotComputer=shotComputer;
-            GameController.nameComputer=nameComputer;
-
-            GameController.shipsPlayer=shipsPlayer;
-            GameController.shotPlayer=shotPlayer;
-            GameController.namePlayer=namePlayer;
-
-            GameController.score = score;
-        }
-
-        public static void Begin_Clicked(object sender, EventArgs e)
-        {
-            if (MouseEvent.BeginArround) MouseEvent.EndedArround();
-
-            EndedGame = false;
-            BeginGame(new object(), new EventArgs());
-
-            BeforeSound.Pause();
-
-            int complexity = Form1.GetComplexity();
-
-            if (complexity == 0)
-            {
-                Form1.ComputerField.computerPlayer = new ComputerPlay();
-            }
-            else
-            {
-                Form1.ComputerField.computerPlayer = new OptimalComputerPlay();
-            }
-
-            EnabledSwitch(Form1.PlayerField.PictBox, false);
-
-            Players OneMove = (Players)random.Next(0, 2);
-            if (OneMove == Players.Computer) Form1.ComputerField.computerPlayer.Move();
-
-            EnabledSwitch(Form1.ComputerField.PictBox, true);
-
-            namePlayer.ForeColor = moveColor;
-        }        
-
-        public static void Ok_Clicked(object sender, EventArgs e)
-        {
-            BeforeGame(new object(), new EventArgs());
-            EnabledSwitch(Form1.PlayerField.PictBox, true);
-
-            foreach (var value in Form1.ComputerField.PictBox)
-                value.RenderingMode = CellCondition.Empty;
-
-            Form1.PlayerField.randomShips.RandomArrangement();
-            Form1.PlayerField.DisplayCompletionCell();
-
-            Form1.ComputerField.randomShips.RandomArrangement();
-
-            PlayerShips = Field.ShipsCount;
-            ComputerShips = Field.ShipsCount;
-
-            PlayerShot = Field.Size * Field.Size;
-            ComputerShot = Field.Size * Field.Size;
-
-            namePlayer.ForeColor = passColor;
-            nameComputer.ForeColor = passColor;
-
-            EndedSound.Stop();
-            BeforeSound.Play();
-        }
-
-        public static void ShipsDrowned(Ships ships)
-        {
-            if (ships.Field is PlayerField)
-            {
-                PlayerShips--;
-                if (ShipsDrown != null) ShipsDrown(ships, new EventArgs());
-            }
-            else
-            {
-                ComputerShips--;
-            }
-        }
-
-        public static void BeginComputerMove()
-        {
-            namePlayer.ForeColor = passColor;
-            nameComputer.ForeColor = moveColor;
-            
-            namePlayer.Invalidate();
-            namePlayer.Update();
-            nameComputer.Invalidate();
-            nameComputer.Update();
-        
-        }
-
-        public static void BeginPlayerMove()
-        {
-            namePlayer.ForeColor = moveColor;
-            nameComputer.ForeColor = passColor;
-        }
-
-        public static void ShotUpdater(Field field, CellCondition result)
-        {
-            if (field is ComputerField) PlayerShot--;
-            else ComputerShot--;
-
-            if (soundPlay)
-            {
-                ShotSound.PlaySync();
-
-                if (result == CellCondition.Miss) MissSound.PlaySync();
-                else
-                if (result == CellCondition.Crippled) CrippledSound.PlaySync();
-                else
-                if (result == CellCondition.Drowned) DrownedShipsSound.PlaySync();
-            }
-            Thread.Sleep(500);
-        }
-
-        static void GameOver(Players winner)
-        {
-            EndedGame = true;
-            EnabledSwitch(Form1.ComputerField.PictBox,false);
-
-            if (winner == Players.Computer)
-            {
-                computerWin++;
-                nameComputer.ForeColor = winColor;
-                namePlayer.ForeColor = lossColor;
-                PlaysSound(LoseSound);
-            }
-            else
-            {
-                playerWin++;
-                nameComputer.ForeColor = lossColor;
-                namePlayer.ForeColor = winColor;
-                PlaysSound(WinSound);
-
-            }
-
-            EndGame(new object(), new EventArgs());
-
-            score.Text = string.Format("{0}:{1}", playerWin, computerWin);
         }
 
         public static void SoundButtonClicked(object sender, EventArgs e)
@@ -310,20 +350,9 @@ namespace SeaBattleGame
 
         static void PlaysSound(MediaPlayer sound)
         {
-            //sound.Position = new TimeSpan(0);
-            sound.Stop();
+            sound.Position = new TimeSpan(0);
             sound.Play();
         }
-
-        static void EnabledSwitch(SeaBattlePicture[,] Matrix, bool value)
-        {
-            for (var i = 0; i < Field.Size; i++)
-            {
-                for (var j = 0; j < Field.Size; j++)
-                {
-                    Matrix[i, j].Enabled = value;
-                }
-            }
-        }
+        #endregion
     }
 }

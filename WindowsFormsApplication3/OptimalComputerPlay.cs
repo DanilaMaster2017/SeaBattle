@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,30 +7,43 @@ using System.Threading.Tasks;
 
 namespace SeaBattleGame
 {
-    enum SearchMode {OneDeckSearch=1, TwoDeckSearch=2, FourDeckSearch=4}
+    enum SearchMode { OneDeckSearch=1, TwoDeckSearch=2, FourDeckSearch=4 }
 
-    enum Diagonal {Main, Side}
+    enum Diagonal { Main, Side }
 
     public class OptimalComputerPlay:ComputerPlay
     {
         SearchMode searchMode;
 
-        Random random=new Random();
+        Random random=new Random(DateTime.Now.Millisecond);
         Diagonal diagonal;
 
         int[] ShipsCount;
 
-        public OptimalComputerPlay():base()
+        public OptimalComputerPlay(Field field):base(field)
         {
-            ShipsCount=new int[] { Field.OnedeckShips, Field.TwodeckShips, Field.ThreedeckShips, Field.FourdeckShips };
+            ShipsCount=new int[] 
+            {
+                Field.OnedeckShips,
+                Field.TwodeckShips,
+                Field.ThreedeckShips,
+                Field.FourdeckShips
+            };
+
             diagonal = (Diagonal)random.Next(0,2);
             searchMode = SearchMode.FourDeckSearch;
-            GameController.ShipsDrown += ChangeMode;  
+            OponentChanged += SubscriptionOponent;            
+        }
+
+        void SubscriptionOponent(object sender, EventArgs e)
+        {
+            Oponent.ownField.ShipDrown += ChangeMode;
         }
 
         void ChangeMode(object sender, EventArgs e)
         {
-            int size = ((Ships)sender).Size;
+            //MessageBox.Show("долбич будь человеком");
+            int size = ((Ship)sender).Size;
 
             ShipsCount[size - 1]--;
 
@@ -45,11 +59,11 @@ namespace SeaBattleGame
 
         protected override void CountingIntactCell()
         {
-            if (diagonal == Diagonal.Main) MCountingIntactCell();
-            else SCountingIntactCell();
+            if (diagonal == Diagonal.Main) MainCountingIntactCell();
+            else SideCountingIntactCell();
         }
 
-        void MCountingIntactCell()
+        void MainCountingIntactCell()
         {
             IntactCell = 0;
 
@@ -65,7 +79,7 @@ namespace SeaBattleGame
             }            
         }
 
-        void SCountingIntactCell()
+        void SideCountingIntactCell()
         {
             int begin = 0;
             IntactCell = 0;
@@ -83,12 +97,12 @@ namespace SeaBattleGame
 
         protected override Location OverrideShot(bool[,] CheckShot, int shot)
         {
-            if (diagonal == Diagonal.Main) return MFromShotLocation(CheckShot, shot);
-            else return SFromShotLocation(CheckShot, shot); 
+            if (diagonal == Diagonal.Main) return MainFromShotLocation(CheckShot, shot);
+            else return SideFromShotLocation(CheckShot, shot); 
         }
 
 
-        Location SFromShotLocation(bool[,] Matrix, int shot)
+        Location SideFromShotLocation(bool[,] Matrix, int shot)
         {  
             int count = 0;
 
@@ -106,8 +120,8 @@ namespace SeaBattleGame
                         if (count == shot)
                         {
                             Matrix[j, i + j] = true;
-                            newLocation.IndexI = j;
-                            newLocation.IndexJ = i + j;
+                            newLocation.I = j;
+                            newLocation.J = i + j;
                         }
                         count++;
                     } 
@@ -116,7 +130,7 @@ namespace SeaBattleGame
             return newLocation;
         }
 
-        Location MFromShotLocation(bool[,] Matrix, int shot)
+        Location MainFromShotLocation(bool[,] Matrix, int shot)
         {
             int count = 0;
 
@@ -134,8 +148,8 @@ namespace SeaBattleGame
                         if (count == shot)
                         {
                             Matrix[j, i - j] = true;
-                            newLocation.IndexI = j;
-                            newLocation.IndexJ = i - j;
+                            newLocation.I = j;
+                            newLocation.J = i - j;
                         }
                         count++;
                     }
