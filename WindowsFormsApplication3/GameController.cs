@@ -102,6 +102,8 @@ namespace SeaBattleGame
 
         static void Init()
         {
+            PlaysSound(BeforeSound);
+
             Form1.RightField.MadeShot += Made_Shot;
             Form1.LeftField.MadeShot += Made_Shot;
         }
@@ -110,21 +112,15 @@ namespace SeaBattleGame
         {
             EnabledSwitch(Form1.LeftField.CellField, false);
 
-            if (MouseEvent.BeginArround) MouseEvent.EndedArround();     
+            if (MouseEvent.BeginArround) MouseEvent.EndedArround();
 
-            BeforeSound.Pause();
+            BackgroundMusic.Stop();
 
             EndedGame = false;
             BeginGame(null, EventArgs.Empty);
 
             leftPlayer = Form1.LeftPlayer;
-            rightPlayer = Form1.RightPlayer;
-
-            rightPlayer.Oponent = leftPlayer;
-            leftPlayer.Oponent = rightPlayer;
-
-            rightPlayer.TransferMove += Transfer_Move;
-            leftPlayer.TransferMove += Transfer_Move;          
+            rightPlayer = Form1.RightPlayer;         
 
             Side OneMove = (Side)random.Next(0, 2);
 
@@ -156,8 +152,8 @@ namespace SeaBattleGame
             resetStatistika(rightStatistika);
             resetStatistika(leftStatistika);
 
-            EndedSound.Stop();
-            BeforeSound.Play();
+            BackgroundMusic.Stop();
+            PlaysSound(BeforeSound);
         }
 
         static void resetStatistika(GameStatistika statistika)
@@ -167,7 +163,7 @@ namespace SeaBattleGame
             statistika.namePlayer.ForeColor = passColor;
         }
 
-        static void Transfer_Move(object sender, EventArgs e)
+        public static void Transfer_Move(object sender, EventArgs e)
         {             
             Player player = (Player)sender;
 
@@ -225,13 +221,13 @@ namespace SeaBattleGame
 
             if (soundPlay)
             {
-                ShotSound.PlaySync();
+                PlaysEffect(ShotSound);
 
-                if (result == CellCondition.Miss) MissSound.PlaySync();
+                if (result == CellCondition.Miss) PlaysEffect(MissSound);
                 else
-                if (result == CellCondition.Crippled) CrippledSound.PlaySync();
+                if (result == CellCondition.Crippled) PlaysEffect(CrippledSound);
                 else
-                if (result == CellCondition.Drowned) DrownedShipsSound.PlaySync();
+                if (result == CellCondition.Drowned) PlaysEffect(DrownedShipsSound);
             }
         }
 
@@ -250,7 +246,7 @@ namespace SeaBattleGame
             else
             {
                 winStatistika = rightStatistika;
-                PlaysSound(LoseSound);
+                PlaysSound(LossSound);
             }
 
             winStatistika.countWin++;
@@ -261,9 +257,6 @@ namespace SeaBattleGame
             EndGame(null, EventArgs.Empty);
 
             score.Text = string.Format("{0}:{1}", leftStatistika.countWin, rightStatistika.countWin);
-
-            rightPlayer.TransferMove -= Transfer_Move;
-            leftPlayer.TransferMove -= Transfer_Move;
         }
 
         static void EnabledSwitch(SeaBattlePicture[,] Matrix, bool value)
@@ -283,44 +276,36 @@ namespace SeaBattleGame
 
         static string path = Environment.CurrentDirectory + "\\PlaySound\\";
 
-        public static MediaPlayer BeforeSound = new MediaPlayer();
-        static MediaPlayer EndedSound = new MediaPlayer();
-        static MediaPlayer WinSound = new MediaPlayer();
-        static MediaPlayer LoseSound = new MediaPlayer();
+        static MediaPlayer BackgroundMusic = new MediaPlayer();
+        static SoundPlayer SoundEffect = new SoundPlayer();
 
-        static SoundPlayer ShotSound;
-        static SoundPlayer MissSound;
-        static SoundPlayer CrippledSound;
-        static SoundPlayer DrownedShipsSound;
+        static string BeforeSound = "pirates.mp3";
+        static string EndedSound = "seaDemons.mp3";
+        static string WinSound = "winner.mp3";
+        static string LossSound = "loss.mp3";
+
+        static string ShotSound = "shot.wav";
+        static string MissSound = "miss.wav";
+        static string CrippledSound = "crip.wav";
+        static string DrownedShipsSound = "drownShips.wav";        
 
         static GameController()
         {
-            ShotSound = new SoundPlayer(path + "shot.wav");
-            MissSound = new SoundPlayer(path + "miss.wav");
-            CrippledSound = new SoundPlayer(path + "crip.wav");
-            DrownedShipsSound = new SoundPlayer(path + "drownShips.wav");
-
-            BeforeSound.Open(new Uri(path + "pirates.mp3", UriKind.RelativeOrAbsolute));
-            EndedSound.Open(new Uri(path + "seaDemons.mp3", UriKind.RelativeOrAbsolute));
-            WinSound.Open(new Uri(path + "winner.mp3", UriKind.RelativeOrAbsolute)); 
-            LoseSound.Open(new Uri(path + "loss.mp3", UriKind.RelativeOrAbsolute));
-
             SoundSwitch(0);
 
-            WinSound.MediaEnded += EndedSoundPlay;
-            LoseSound.MediaEnded += EndedSoundPlay;
-
-            BeforeSound.MediaEnded += BeforeSound_MediaEnded;       
-        }
-
-        private static void BeforeSound_MediaEnded(object sender, EventArgs e)
-        {
-            PlaysSound(BeforeSound);
+            BackgroundMusic.MediaEnded += EndedSoundPlay;     
         }
 
         private static void EndedSoundPlay(object sender, EventArgs e)
         {
-            PlaysSound(EndedSound);
+            if (BackgroundMusic.Source.AbsolutePath.Contains(BeforeSound))
+            {
+                PlaysSound(BeforeSound);
+            }
+            else
+            {
+                PlaysSound(EndedSound);
+            }
         }
 
         public static void SoundButtonClicked(object sender, EventArgs e)
@@ -331,7 +316,7 @@ namespace SeaBattleGame
             if (soundPlay)
             {
                 picture.BackgroundImage = Properties.Resources.PlaySound;
-                SoundSwitch(1);
+                SoundSwitch(0.5);
             }
             else
             {
@@ -342,16 +327,19 @@ namespace SeaBattleGame
 
         static void SoundSwitch(double volume)
         {
-            BeforeSound.Volume = volume;
-            EndedSound.Volume = volume;
-            WinSound.Volume = volume;
-            LoseSound.Volume = volume;
+            BackgroundMusic.Volume = volume;
         }
 
-        static void PlaysSound(MediaPlayer sound)
+        static void PlaysSound(string sound)
         {
-            sound.Position = new TimeSpan(0);
-            sound.Play();
+            BackgroundMusic.Open(new Uri(path + sound, UriKind.RelativeOrAbsolute));
+            BackgroundMusic.Play();
+        }
+
+        static void PlaysEffect(string sound)
+        {
+            SoundEffect.SoundLocation = path + sound;
+            SoundEffect.PlaySync();
         }
         #endregion
     }

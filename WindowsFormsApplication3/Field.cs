@@ -16,9 +16,6 @@ namespace SeaBattleGame
 
         public bool[,] MatrixShips { get; set; }
 
-        public Player Oponent { get; set; }
-
-        public event EventHandler ShipDrown;
         public event EventHandler MadeShot;
 
         public static int FourdeckShips { get; } = 1;
@@ -80,9 +77,6 @@ namespace SeaBattleGame
             Location location = ship.Location;
             Orientation orientation = ship.Orientation;
             int size = ship.Size;
-
-            if (Oponent is ComputerPlay) ship.MarkShip(((ComputerPlay)Oponent).CheckShot);
-            ShipDrown?.Invoke(ship, EventArgs.Empty);
 
             int shiftDown;
             int shiftRight;

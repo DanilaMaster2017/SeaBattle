@@ -40,8 +40,6 @@ namespace SeaBattleGame
             GameController.BeginGame += BeginGame;
             GameController.EndGame += EndGame;
 
-            GameController.BeforeSound.Play();
-
             MouseWheel += MouseEvent.MouseWheel;
 
             button1.Click += GameController.Begin_Clicked;
@@ -49,18 +47,9 @@ namespace SeaBattleGame
 
             button2.Click += LeftField.RandomShips.RandomClicked;
 
-            button1.MouseEnter += MouseEvent.ButtonEnter;
-            button2.MouseEnter += MouseEvent.ButtonEnter;
-            button3.MouseEnter += MouseEvent.ButtonEnter;
-
-            button1.MouseLeave += MouseEvent.ButtonLeave;
-            button2.MouseLeave += MouseEvent.ButtonLeave;
-            button3.MouseLeave += MouseEvent.ButtonLeave;
-
             FillTable(tableLayoutPanel1, LeftField.CellField);
             FillTable(tableLayoutPanel2, RightField.CellField);
             LeftField.DisplayCompletionCell();
-            //   MessageBox.Show(field.PictBox[i, j].Margin.All.ToString());
         }
 
         void FillTable(TableLayoutPanel table, SeaBattlePicture[,] PictBox)
@@ -106,16 +95,41 @@ namespace SeaBattleGame
             {
                 RightPlayer = new OptimalComputerPlay(RightField);
             }
+
+            RightPlayer.Oponent = LeftPlayer;
+            LeftPlayer.Oponent = RightPlayer;
+
+            RightPlayer.TransferMove += GameController.Transfer_Move;
+            LeftPlayer.TransferMove += GameController.Transfer_Move;
         }
 
         void EndGame(object sender, EventArgs e)
         {
+            RightPlayer.TransferMove -= GameController.Transfer_Move;
+            LeftPlayer.TransferMove -= GameController.Transfer_Move;
+
             button3.Visible = true;
         }
 
         public static int GetComplexity()
         {
             return (comboBox).SelectedIndex;
+        }
+
+        void ButtonEnter(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+
+            button.BackColor = Color.Blue;
+            button.ForeColor = Color.Gold;
+        }
+
+        void ButtonLeave(object sender, EventArgs e)
+        {
+            Button button = (Button)sender;
+
+            button.BackColor = Color.DodgerBlue;
+            button.ForeColor = Color.White;
         }
     }
 }

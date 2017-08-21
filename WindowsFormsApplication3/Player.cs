@@ -23,7 +23,6 @@ namespace SeaBattleGame
             set {
                     oponent = value;
                     oponentField = oponent.ownField;
-                    ownField.Oponent = oponent;
                     OponentChanged?.Invoke(this, EventArgs.Empty);
             }
         }

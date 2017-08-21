@@ -123,6 +123,8 @@
             this.button1.TabIndex = 5;
             this.button1.Text = "Начать игру!";
             this.button1.UseVisualStyleBackColor = false;
+            this.button1.MouseEnter += new System.EventHandler(this.ButtonEnter);
+            this.button1.MouseLeave += new System.EventHandler(this.ButtonLeave);
             // 
             // button2
             // 
@@ -136,6 +138,8 @@
             this.button2.TabIndex = 6;
             this.button2.Text = "Случайная перестановка";
             this.button2.UseVisualStyleBackColor = false;
+            this.button2.MouseEnter += new System.EventHandler(this.ButtonEnter);
+            this.button2.MouseLeave += new System.EventHandler(this.ButtonLeave);
             // 
             // button3
             // 
@@ -143,13 +147,15 @@
             this.button3.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
             this.button3.FlatStyle = System.Windows.Forms.FlatStyle.Popup;
             this.button3.ForeColor = System.Drawing.Color.White;
-            this.button3.Location = new System.Drawing.Point(268, 329);
+            this.button3.Location = new System.Drawing.Point(269, 389);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(40, 40);
             this.button3.TabIndex = 7;
             this.button3.Text = "Ок!";
             this.button3.UseVisualStyleBackColor = false;
             this.button3.Visible = false;
+            this.button3.MouseEnter += new System.EventHandler(this.ButtonEnter);
+            this.button3.MouseLeave += new System.EventHandler(this.ButtonLeave);
             // 
             // label1
             // 

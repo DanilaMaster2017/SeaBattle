@@ -206,21 +206,5 @@ namespace SeaBattleGame
 
             ship = null;
         }
-
-        public static void ButtonEnter(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-
-            button.BackColor = System.Drawing.Color.Blue;
-            button.ForeColor = System.Drawing.Color.Gold;
-        }
-
-        public static void ButtonLeave(object sender, EventArgs e)
-        {
-            Button button = (Button)sender;
-
-            button.BackColor = System.Drawing.Color.DodgerBlue;
-            button.ForeColor = System.Drawing.Color.White;
-        }
     }
 }

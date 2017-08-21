@@ -45,6 +45,9 @@ namespace SeaBattleGame
         {          
             if (GameController.EndedGame) return;
 
+            if (shotState == CellCondition.Drowned)
+                MarkDrownedShip();
+
             CountingIntactCell();
 
             switch (moveState)
@@ -61,9 +64,19 @@ namespace SeaBattleGame
                     SureShot();
                     break;
             }
-
+            
             if (shotState == CellCondition.Miss)
                 CallTransferMove();
+        }
+
+        protected virtual Ship MarkDrownedShip()
+        {
+           Ship ship = 
+                oponentField.CellField[currentShot.I, currentShot.J].ShipIntoCell;
+
+            ship.MarkShip(CheckShot);
+
+            return ship;
         }
 
         protected virtual void CountingIntactCell()

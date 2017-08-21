@@ -15,7 +15,7 @@ namespace SeaBattleGame
     {
         SearchMode searchMode;
 
-        Random random=new Random(DateTime.Now.Millisecond);
+        Random random = new Random(DateTime.Now.Millisecond);
         Diagonal diagonal;
 
         int[] ShipsCount;
@@ -31,19 +31,21 @@ namespace SeaBattleGame
             };
 
             diagonal = (Diagonal)random.Next(0,2);
-            searchMode = SearchMode.FourDeckSearch;
-            OponentChanged += SubscriptionOponent;            
+            searchMode = SearchMode.FourDeckSearch;         
         }
 
-        void SubscriptionOponent(object sender, EventArgs e)
+        protected override Ship MarkDrownedShip()
         {
-            Oponent.ownField.ShipDrown += ChangeMode;
+           Ship ship = base.MarkDrownedShip();
+
+            ChangeMode(ship);
+
+            return ship;
         }
 
-        void ChangeMode(object sender, EventArgs e)
-        {
-            //MessageBox.Show("долбич будь человеком");
-            int size = ((Ship)sender).Size;
+        void ChangeMode(Ship ship)
+        { 
+            int size = ship.Size;
 
             ShipsCount[size - 1]--;
 
