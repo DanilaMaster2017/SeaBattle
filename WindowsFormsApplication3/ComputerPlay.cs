@@ -18,7 +18,7 @@ namespace SeaBattleGame
         bool oneGuessing = false;
 
         Random random = new Random(DateTime.Now.Millisecond);
-        public bool[,] CheckShot = new bool[Field.Size, Field.Size];
+        protected bool[,] CheckShot = new bool[Field.Size, Field.Size];
         bool[] ChekDirection = new bool[4];
 
         int count;

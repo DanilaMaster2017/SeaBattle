@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,13 +8,21 @@ using System.Threading.Tasks;
 
 namespace SeaBattleGame
 {
-    enum SearchMode { OneDeckSearch=1, TwoDeckSearch=2, FourDeckSearch=4 }
+    public enum SearchMode { OneDeckSearch=1, TwoDeckSearch=2, FourDeckSearch=4 }
 
     enum Diagonal { Main, Side }
 
-    public class OptimalComputerPlay:ComputerPlay
+    public class OptimalComputerPlay : ComputerPlay, IEnumerable
     {
         SearchMode searchMode;
+
+        public SearchMode SearchMod
+        {
+            get { return searchMode; }
+            set { searchMode = value; }
+        }
+
+        IGetLocation location;
 
         Random random = new Random(DateTime.Now.Millisecond);
         Diagonal diagonal;
@@ -61,104 +70,51 @@ namespace SeaBattleGame
 
         protected override void CountingIntactCell()
         {
-            if (diagonal == Diagonal.Main) MainCountingIntactCell();
-            else SideCountingIntactCell();
-        }
-
-        void MainCountingIntactCell()
-        {
             IntactCell = 0;
 
-            int begin = 0;
-            for (var i = -1 + (int)searchMode; i <= 2 * (Field.Size - 1); i += (int)searchMode)
+            foreach(var value in this)
             {
-                if (i > (Field.Size - 1)) begin = i - (Field.Size - 1);
-
-                for (var j = begin; ((i - j >= 0) && (j < Field.Size)); j++)
+                if (!(bool)value)
                 {
-                    if (!CheckShot[j, i - j]) IntactCell++;
-                }
+                    IntactCell++;
+                }             
             }            
         }
-
-        void SideCountingIntactCell()
-        {
-            int begin = 0;
-            IntactCell = 0;
-
-            for (var i = Field.Size - (int)searchMode; i > -Field.Size; i -= (int)searchMode)
-            {
-                if (i<0) begin = -i;
-
-                for (var j = begin; ((i + j  < Field.Size) && (j < Field.Size)); j++)
-                {
-                    if (!CheckShot[j, i + j]) IntactCell++;
-                }
-            }
-        }
-
-        protected override Location OverrideShot(bool[,] CheckShot, int shot)
-        {
-            if (diagonal == Diagonal.Main) return MainFromShotLocation(CheckShot, shot);
-            else return SideFromShotLocation(CheckShot, shot); 
-        }
-
-
-        Location SideFromShotLocation(bool[,] Matrix, int shot)
-        {  
-            int count = 0;
-
-            Location newLocation = new Location();
-            int begin = 0;
-
-            for (var i = Field.Size - (int)searchMode; i > -Field.Size; i -= (int)searchMode)
-            {
-                if (i < 0) begin = -i;
-
-                for (var j = begin; ((i + j < Field.Size) && (j < Field.Size)); j++)
-                {
-                   if (!Matrix[j, i + j])
-                    {
-                        if (count == shot)
-                        {
-                            Matrix[j, i + j] = true;
-                            newLocation.I = j;
-                            newLocation.J = i + j;
-                        }
-                        count++;
-                    } 
-                }
-            }
-            return newLocation;
-        }
-
-        Location MainFromShotLocation(bool[,] Matrix, int shot)
+        
+        protected override Location OverrideShot(bool[,] Matrix, int shot)
         {
             int count = 0;
 
             Location newLocation = new Location();
 
-            int begin = 0;
-            for (var i = -1 + (int)searchMode; i <= 2 * (Field.Size - 1); i += (int)searchMode)
+            foreach(var value in this)
             {
-                if (i > (Field.Size - 1)) begin = i - (Field.Size - 1);
+                    bool chek = (bool)value;
 
-                for (var j = begin; ((i - j >= 0) && (j < Field.Size)); j++)
-                {
-                    if (!Matrix[j, i - j])
+                    if (!chek)
                     {
                         if (count == shot)
                         {
-                            Matrix[j, i - j] = true;
-                            newLocation.I = j;
-                            newLocation.J = i - j;
+                            newLocation = location.GetLocation();
                         }
-                        count++;
-                    }
+                        count++;                 
                 }
             }
-
             return newLocation;
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            if (diagonal == Diagonal.Main)
+            {
+                location = new MainEnumerator(CheckShot);
+            }
+            else
+            {
+                location = new SideEnumerator(CheckShot);
+            }
+
+            return (IEnumerator)location;
         }
     }
 }

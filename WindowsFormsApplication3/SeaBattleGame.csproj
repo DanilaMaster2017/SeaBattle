@@ -75,7 +75,9 @@
     <Compile Include="GameController.cs" />
     <Compile Include="GeneralFunction.cs" />
     <Compile Include="HumanPlay.cs" />
+    <Compile Include="IGetLocation.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="MainEnumerator.cs" />
     <Compile Include="MouseEvent.cs" />
     <Compile Include="OptimalComputerPlay.cs" />
     <Compile Include="Orientation.cs" />
@@ -89,6 +91,7 @@
     </Compile>
     <Compile Include="Ship.cs" />
     <Compile Include="shotEventArgs.cs" />
+    <Compile Include="SideEnumerator.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
